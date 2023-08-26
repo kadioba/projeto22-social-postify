@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { CreateMediaDto } from './dto/create-media.dto';
-import { UpdateMediaDto } from './dto/update-media.dto';
 
 @Injectable()
 export class MediasService {
@@ -16,7 +15,7 @@ export class MediasService {
     return `This action returns a #${id} media`;
   }
 
-  update(id: number, updateMediaDto: UpdateMediaDto) {
+  update(id: number) {
     return `This action updates a #${id} media`;
   }
 

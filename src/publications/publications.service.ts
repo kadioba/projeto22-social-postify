@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { CreatePublicationDto } from './dto/create-publication.dto';
-import { UpdatePublicationDto } from './dto/update-publication.dto';
 
 @Injectable()
 export class PublicationsService {
@@ -16,8 +15,8 @@ export class PublicationsService {
     return `This action returns a #${id} publication`;
   }
 
-  update(id: number, updatePublicationDto: UpdatePublicationDto) {
-    return `This action updates a #${id} publication`;
+  update() {
+    return 'Not implemented yet';
   }
 
   remove(id: number) {

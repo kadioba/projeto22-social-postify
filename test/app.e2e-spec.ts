@@ -17,6 +17,7 @@ describe('AppController (e2e)', () => {
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe());
     prisma = await moduleFixture.resolve(PrismaService);
+    await prisma.publication.deleteMany();
     await prisma.media.deleteMany();
     await prisma.post.deleteMany();
     await app.init();
@@ -266,5 +267,160 @@ describe('AppController (e2e)', () => {
       postId: post.id,
       date: expect.any(String),
     });
+  });
+
+  it('GET publications => should return all publications', async () => {
+    const media = await prisma.media.create({
+      data: {
+        title: faker.company.name(),
+        username: faker.internet.userName(),
+      },
+    });
+    const post = await prisma.post.create({
+      data: {
+        title: faker.company.name(),
+        text: faker.lorem.paragraph(),
+        image: faker.image.url(),
+      },
+    });
+    await prisma.publication.create({
+      data: {
+        mediaId: media.id,
+        postId: post.id,
+        date: faker.date.past(),
+      },
+    });
+
+    const response = await request(app.getHttpServer()).get('/publications');
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toEqual([
+      {
+        id: expect.any(Number),
+        mediaId: media.id,
+        postId: post.id,
+        date: expect.any(String),
+      },
+    ]);
+  });
+
+  it('GET publications/:id => should return a publication', async () => {
+    const media = await prisma.media.create({
+      data: {
+        title: faker.company.name(),
+        username: faker.internet.userName(),
+      },
+    });
+    const post = await prisma.post.create({
+      data: {
+        title: faker.company.name(),
+        text: faker.lorem.paragraph(),
+        image: faker.image.url(),
+      },
+    });
+    const publication = await prisma.publication.create({
+      data: {
+        mediaId: media.id,
+        postId: post.id,
+        date: faker.date.past(),
+      },
+    });
+
+    const response = await request(app.getHttpServer()).get(
+      `/publications/${publication.id}`,
+    );
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toEqual({
+      id: publication.id,
+      mediaId: media.id,
+      postId: post.id,
+      date: expect.any(String),
+    });
+  });
+
+  it('PUT publications/:id => should update a publication', async () => {
+    const media = await prisma.media.create({
+      data: {
+        title: faker.company.name(),
+        username: faker.internet.userName(),
+      },
+    });
+    const post = await prisma.post.create({
+      data: {
+        title: faker.company.name(),
+        text: faker.lorem.paragraph(),
+        image: faker.image.url(),
+      },
+    });
+    const publication = await prisma.publication.create({
+      data: {
+        mediaId: media.id,
+        postId: post.id,
+        date: faker.date.future(),
+      },
+    });
+    const newMedia = await prisma.media.create({
+      data: {
+        title: faker.company.name(),
+        username: faker.internet.userName(),
+      },
+    });
+    const newPost = await prisma.post.create({
+      data: {
+        title: faker.company.name(),
+        text: faker.lorem.paragraph(),
+        image: faker.image.url(),
+      },
+    });
+
+    const response = await request(app.getHttpServer())
+      .put(`/publications/${publication.id}`)
+      .send({
+        mediaId: newMedia.id,
+        postId: newPost.id,
+        date: new Date(),
+      });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toEqual({
+      id: publication.id,
+      mediaId: newMedia.id,
+      postId: newPost.id,
+      date: expect.any(String),
+    });
+  });
+
+  it('DELETE publications/:id => should delete a publication', async () => {
+    const media = await prisma.media.create({
+      data: {
+        title: faker.company.name(),
+        username: faker.internet.userName(),
+      },
+    });
+    const post = await prisma.post.create({
+      data: {
+        title: faker.company.name(),
+        text: faker.lorem.paragraph(),
+        image: faker.image.url(),
+      },
+    });
+    const publication = await prisma.publication.create({
+      data: {
+        mediaId: media.id,
+        postId: post.id,
+        date: faker.date.past(),
+      },
+    });
+
+    const response = await request(app.getHttpServer()).delete(
+      `/publications/${publication.id}`,
+    );
+    expect(response.statusCode).toBe(200);
+
+    const verifyDelete = await request(app.getHttpServer()).get(
+      `/publications/${publication.id}`,
+    );
+    expect(verifyDelete.statusCode).toBe(404);
   });
 });

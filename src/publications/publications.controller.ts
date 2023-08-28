@@ -7,6 +7,7 @@ import {
   Delete,
   ParseIntPipe,
   Put,
+  Query,
 } from '@nestjs/common';
 import { PublicationsService } from './publications.service';
 import { CreatePublicationDto } from './dto/create-publication.dto';
@@ -21,8 +22,11 @@ export class PublicationsController {
   }
 
   @Get()
-  findAll() {
-    return this.publicationsService.findAll();
+  findAll(
+    @Query('published') published: boolean,
+    @Query('after') after: string,
+  ) {
+    return this.publicationsService.findAll(published, after);
   }
 
   @Get(':id')

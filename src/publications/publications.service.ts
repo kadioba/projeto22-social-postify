@@ -22,8 +22,19 @@ export class PublicationsService {
     return await this.publicationsRepository.create(body);
   }
 
-  async findAll() {
-    return await this.publicationsRepository.findAll();
+  async findAll(published?: boolean, after?: string) {
+    const publications = await this.publicationsRepository.findAll();
+    if (published) {
+      return publications.filter(
+        (publication) => new Date(publication.date) < new Date(),
+      );
+    }
+    if (after) {
+      return publications.filter(
+        (publication) => new Date(publication.date) > new Date(after),
+      );
+    }
+    return publications;
   }
 
   async findOne(id: number) {
@@ -39,7 +50,7 @@ export class PublicationsService {
     if (!publication) {
       throw new NotFoundException();
     }
-    if (publication.date < new Date()) {
+    if (new Date(publication.date) < new Date()) {
       throw new ForbiddenException();
     }
     await this.mediasService.findOne(body.mediaId);

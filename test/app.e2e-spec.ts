@@ -18,6 +18,7 @@ describe('AppController (e2e)', () => {
     app.useGlobalPipes(new ValidationPipe());
     prisma = await moduleFixture.resolve(PrismaService);
     await prisma.media.deleteMany();
+    await prisma.post.deleteMany();
     await app.init();
   });
 
@@ -129,6 +130,112 @@ describe('AppController (e2e)', () => {
 
     const verifyDelete = await request(app.getHttpServer()).get(
       `/medias/${media.id}`,
+    );
+    expect(verifyDelete.statusCode).toBe(404);
+  });
+
+  it('POST /posts => should create a post', async () => {
+    const title = faker.company.name();
+    const text = faker.lorem.paragraph();
+    const image = faker.image.url();
+
+    const response = await request(app.getHttpServer())
+      .post('/posts')
+      .send({ title, text, image });
+
+    expect(response.statusCode).toBe(201);
+    expect(response.body).toEqual({
+      id: expect.any(Number),
+      title,
+      text,
+      image,
+    });
+  });
+
+  it('GET /posts => should return all posts', async () => {
+    const title = faker.company.name();
+    const text = faker.lorem.paragraph();
+    await prisma.post.create({
+      data: {
+        title,
+        text,
+      },
+    });
+
+    const response = await request(app.getHttpServer()).get('/posts');
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toEqual([
+      {
+        id: expect.any(Number),
+        title,
+        text,
+      },
+    ]);
+  });
+
+  it('GET /posts/:id => should return a post', async () => {
+    const title = faker.company.name();
+    const text = faker.lorem.paragraph();
+    const post = await prisma.post.create({
+      data: {
+        title,
+        text,
+      },
+    });
+    const response = await request(app.getHttpServer()).get(
+      `/posts/${post.id}`,
+    );
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toEqual(
+      expect.objectContaining({
+        id: post.id,
+        title,
+        text,
+      }),
+    );
+  });
+
+  it('PUT /posts/:id => should update a post', async () => {
+    const title = faker.company.name();
+    const text = faker.lorem.paragraph();
+    const newTitle = faker.company.name();
+    const newText = faker.lorem.paragraph();
+    const post = await prisma.post.create({
+      data: {
+        title,
+        text,
+      },
+    });
+
+    const response = await request(app.getHttpServer())
+      .put(`/posts/${post.id}`)
+      .send({ title: newTitle, text: newText });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toEqual({
+      id: post.id,
+      title: newTitle,
+      text: newText,
+    });
+  });
+
+  it('DELETE /posts/:id => should delete a post', async () => {
+    const title = faker.company.name();
+    const text = faker.lorem.paragraph();
+    const post = await prisma.post.create({
+      data: {
+        title,
+        text,
+      },
+    });
+
+    const response = await request(app.getHttpServer()).delete(
+      `/posts/${post.id}`,
+    );
+    expect(response.statusCode).toBe(200);
+
+    const verifyDelete = await request(app.getHttpServer()).get(
+      `/posts/${post.id}`,
     );
     expect(verifyDelete.statusCode).toBe(404);
   });

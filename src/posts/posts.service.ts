@@ -34,7 +34,11 @@ export class PostsService {
     if (!postExists) {
       throw new NotFoundException();
     }
-    return await this.postsRepository.update(id, body);
+    const updatedPost = await this.postsRepository.update(id, body);
+    if (updatedPost.image === null) {
+      delete updatedPost.image;
+    }
+    return updatedPost;
   }
 
   async remove(id: number) {

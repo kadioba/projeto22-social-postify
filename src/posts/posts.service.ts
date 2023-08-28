@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { PostsRepository } from './posts.repository';
-import { PublicationsService } from 'src/publications/publications.service';
+import { PublicationsService } from '../publications/publications.service';
 
 @Injectable()
 export class PostsService {

@@ -40,4 +40,20 @@ export class PublicationsRepository {
       },
     });
   }
+
+  async findByMediaId(id: number) {
+    return await this.prisma.publication.findMany({
+      where: {
+        mediaId: id,
+      },
+    });
+  }
+
+  async findByPostId(id: number) {
+    return await this.prisma.publication.findMany({
+      where: {
+        postId: id,
+      },
+    });
+  }
 }

@@ -1,10 +1,21 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  forwardRef,
+} from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { PostsRepository } from './posts.repository';
+import { PublicationsService } from 'src/publications/publications.service';
 
 @Injectable()
 export class PostsService {
-  constructor(private readonly postsRepository: PostsRepository) {}
+  constructor(
+    @Inject(forwardRef(() => PublicationsService))
+    private readonly publicationsService: PublicationsService,
+    private readonly postsRepository: PostsRepository,
+  ) {}
   async create(body: CreatePostDto) {
     return await this.postsRepository.create(body);
   }
@@ -46,8 +57,10 @@ export class PostsService {
     if (!postExists) {
       throw new NotFoundException();
     }
-    // TODO BUSCAR PUBLICATIONS QUE CONTENHAM ESTE POST
-    // SE EXISTIREM AS PUBLICATIONS, ERRO 403
+    const publications = await this.publicationsService.findByPostId(id);
+    if (publications.length > 0) {
+      throw new ForbiddenException();
+    }
     return await this.postsRepository.remove(id);
   }
 }

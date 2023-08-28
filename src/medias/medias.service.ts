@@ -1,14 +1,22 @@
 import {
   ConflictException,
+  ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
+  forwardRef,
 } from '@nestjs/common';
 import { CreateMediaDto } from './dto/create-media.dto';
 import { MediasRepository } from './medias.repository';
+import { PublicationsService } from 'src/publications/publications.service';
 
 @Injectable()
 export class MediasService {
-  constructor(private readonly mediasRepository: MediasRepository) {}
+  constructor(
+    @Inject(forwardRef(() => PublicationsService))
+    private readonly publicationsService: PublicationsService,
+    private readonly mediasRepository: MediasRepository,
+  ) {}
 
   async create(body: CreateMediaDto) {
     const mediaExists = await this.mediasRepository.findOne(body);
@@ -42,14 +50,15 @@ export class MediasService {
     return await this.mediasRepository.update(id, body);
   }
 
-  remove(id: number) {
-    const mediaExists = this.mediasRepository.findUnique(id);
+  async remove(id: number) {
+    const mediaExists = await this.mediasRepository.findUnique(id);
     if (!mediaExists) {
       throw new NotFoundException();
     }
-    // TODO BUSCAR PUBLICATIONS QUE CONTENHAM ESTA MEDIA
-    // SE EXISTIREM AS PUBLICATIONS, ERRO 403
-
+    const publications = await this.publicationsService.findByMediaId(id);
+    if (publications.length > 0) {
+      throw new ForbiddenException();
+    }
     return this.mediasRepository.remove(id);
   }
 }

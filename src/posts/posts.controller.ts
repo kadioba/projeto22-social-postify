@@ -3,9 +3,10 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
+  ParseIntPipe,
+  Put,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -15,8 +16,8 @@ export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Post()
-  create(@Body() createPostDto: CreatePostDto) {
-    return this.postsService.create(createPostDto);
+  create(@Body() body: CreatePostDto) {
+    return this.postsService.create(body);
   }
 
   @Get()
@@ -25,17 +26,20 @@ export class PostsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.postsService.findOne(+id);
+  findOne(@Param('id', new ParseIntPipe()) id: number) {
+    return this.postsService.findOne(id);
   }
 
-  @Patch(':id')
-  update() {
-    return 'Not implemented yet';
+  @Put(':id')
+  update(
+    @Param('id', new ParseIntPipe()) id: number,
+    @Body() body: CreatePostDto,
+  ) {
+    return this.postsService.update(id, body);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.postsService.remove(+id);
+  remove(@Param('id', new ParseIntPipe()) id: number) {
+    return this.postsService.remove(id);
   }
 }

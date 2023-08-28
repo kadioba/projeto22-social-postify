@@ -1,25 +1,49 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
+import { PostsRepository } from './posts.repository';
 
 @Injectable()
 export class PostsService {
-  create(createPostDto: CreatePostDto) {
-    return 'This action adds a new post';
+  constructor(private readonly postsRepository: PostsRepository) {}
+  async create(body: CreatePostDto) {
+    return await this.postsRepository.create(body);
   }
 
-  findAll() {
-    return `This action returns all posts`;
+  async findAll() {
+    return (await this.postsRepository.findAll()).map((post) => {
+      if (!post.image) {
+        delete post.image;
+      }
+      return post;
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} post`;
+  async findOne(id: number) {
+    const post = await this.postsRepository.findUnique(id);
+    if (!post) {
+      throw new NotFoundException();
+    }
+    if (post.image === null) {
+      delete post.image;
+    }
+    return post;
   }
 
-  update(id: number) {
-    return `This action updates a #${id} post`;
+  async update(id: number, body: CreatePostDto) {
+    const postExists = await this.postsRepository.findUnique(id);
+    if (!postExists) {
+      throw new NotFoundException();
+    }
+    return await this.postsRepository.update(id, body);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} post`;
+  async remove(id: number) {
+    const postExists = await this.postsRepository.findUnique(id);
+    if (!postExists) {
+      throw new NotFoundException();
+    }
+    // TODO BUSCAR PUBLICATIONS QUE CONTENHAM ESTE POST
+    // SE EXISTIREM AS PUBLICATIONS, ERRO 403
+    return await this.postsRepository.remove(id);
   }
 }

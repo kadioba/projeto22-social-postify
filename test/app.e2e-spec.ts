@@ -239,4 +239,32 @@ describe('AppController (e2e)', () => {
     );
     expect(verifyDelete.statusCode).toBe(404);
   });
+
+  it('POST publications => should create a publication', async () => {
+    const media = await prisma.media.create({
+      data: {
+        title: faker.company.name(),
+        username: faker.internet.userName(),
+      },
+    });
+    const post = await prisma.post.create({
+      data: {
+        title: faker.company.name(),
+        text: faker.lorem.paragraph(),
+        image: faker.image.url(),
+      },
+    });
+
+    const response = await request(app.getHttpServer())
+      .post('/publications')
+      .send({ mediaId: media.id, postId: post.id, date: faker.date.past() });
+
+    expect(response.statusCode).toBe(201);
+    expect(response.body).toEqual({
+      id: expect.any(Number),
+      mediaId: media.id,
+      postId: post.id,
+      date: expect.any(String),
+    });
+  });
 });

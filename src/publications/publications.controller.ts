@@ -3,9 +3,10 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
+  ParseIntPipe,
+  Put,
 } from '@nestjs/common';
 import { PublicationsService } from './publications.service';
 import { CreatePublicationDto } from './dto/create-publication.dto';
@@ -15,8 +16,8 @@ export class PublicationsController {
   constructor(private readonly publicationsService: PublicationsService) {}
 
   @Post()
-  create(@Body() createPublicationDto: CreatePublicationDto) {
-    return this.publicationsService.create(createPublicationDto);
+  create(@Body() body: CreatePublicationDto) {
+    return this.publicationsService.create(body);
   }
 
   @Get()
@@ -25,17 +26,20 @@ export class PublicationsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.publicationsService.findOne(+id);
+  findOne(@Param('id', new ParseIntPipe()) id: number) {
+    return this.publicationsService.findOne(id);
   }
 
-  @Patch(':id')
-  update() {
-    return 'Not implemented yet';
+  @Put(':id')
+  update(
+    @Param('id', new ParseIntPipe()) id: number,
+    @Body() body: CreatePublicationDto,
+  ) {
+    return this.publicationsService.update(id, body);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.publicationsService.remove(+id);
+  remove(@Param('id', new ParseIntPipe()) id: number) {
+    return this.publicationsService.remove(id);
   }
 }

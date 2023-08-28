@@ -1,25 +1,57 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreatePublicationDto } from './dto/create-publication.dto';
+import { PublicationsRepository } from './publications.repository';
+import { MediasService } from '../medias/medias.service';
+import { PostsService } from '../posts/posts.service';
 
 @Injectable()
 export class PublicationsService {
-  create(createPublicationDto: CreatePublicationDto) {
-    return 'This action adds a new publication';
+  constructor(
+    private readonly publicationsRepository: PublicationsRepository,
+    private readonly mediasService: MediasService,
+    private readonly postService: PostsService,
+  ) {}
+
+  async create(body: CreatePublicationDto) {
+    await this.mediasService.findOne(body.mediaId);
+    await this.postService.findOne(body.postId);
+    return await this.publicationsRepository.create(body);
   }
 
-  findAll() {
-    return `This action returns all publications`;
+  async findAll() {
+    return await this.publicationsRepository.findAll();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} publication`;
+  async findOne(id: number) {
+    const publication = await this.publicationsRepository.findUnique(id);
+    if (!publication) {
+      throw new NotFoundException();
+    }
+    return publication;
   }
 
-  update() {
-    return 'Not implemented yet';
+  async update(id: number, body: CreatePublicationDto) {
+    const publication = await this.publicationsRepository.findUnique(id);
+    if (!publication) {
+      throw new NotFoundException();
+    }
+    if (publication.date < new Date()) {
+      throw new ForbiddenException();
+    }
+    await this.mediasService.findOne(body.mediaId);
+    await this.postService.findOne(body.postId);
+    return await this.publicationsRepository.update(id, body);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} publication`;
+  async remove(id: number) {
+    const publication = await this.publicationsRepository.findUnique(id);
+    if (!publication) {
+      throw new NotFoundException();
+    }
+    return await this.publicationsRepository.remove(id);
   }
 }
